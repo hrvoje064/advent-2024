@@ -1,4 +1,4 @@
-(* Advent of Code - 2024; day1 - part1 *)
+(* Advent of Code - 2024; day1 - part1 on BPI-F3 RISC-V SBC *)
 
 #load "utils.cmo"
 open Utils

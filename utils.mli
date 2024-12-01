@@ -61,3 +61,16 @@ val combinations : ?size:int -> 'a list -> 'a list list
 
 (* Permutations *)
 val permutations : 'a list -> 'a list list    
+
+(* ====================================================== *)
+
+(* faster version with BST - finding duplicates *)
+(* finding number of specific element in a list *)
+type 'a t = Lf | Br of 'a t * ('a * 'a) * 'a t
+
+(* get number of repeated elemnets *)
+val get : int -> int t -> int
+
+(* make BST from list of ints *)
+val bst_of_list : int list -> int t
+    

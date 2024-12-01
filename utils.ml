@@ -220,3 +220,33 @@ let  permutations4 l =
       List.concat (List.map (fun p -> interleave [] x n p)
                      (perms (n-1) xs))
   in perms ((List.length l)-1) l
+
+(* faster version with BST - finding duplicates *)
+type 'a t = Lf | Br of 'a t * ('a * 'a) * 'a t
+
+let rec get k = function
+    Lf -> 0
+  | Br (_, (k',v), _) when k' = k -> v
+  | Br (l, (k',_), r) -> if k < k' then get k l else get k r
+
+let rec insert e = function
+    Lf -> Br (Lf, (e,1), Lf)
+  | Br (l,(k,v),r) when k = e -> Br (l,(k,v+1),r)
+  | Br (l,(k,v),r) -> if e < k then Br (insert e l,(k,v), r)
+    else Br (l, (k,v), insert e r)
+
+let set_of_blist l =
+  let rec ltos s len = function
+      [] -> s
+    | [x] -> insert x s
+    | l ->
+      begin
+        let len2 = len / 2 in
+        match take_drop len2 l with
+          (a,x::xs) ->
+          ltos (ltos (insert x s) (len2 - 1) a) (len2 - 1) xs
+        | _ -> failwith "set_of_blist"
+      end
+  in ltos Lf (List.length l) (List.sort compare l)
+
+let bst_of_list = set_of_blist

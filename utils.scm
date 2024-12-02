@@ -5,7 +5,8 @@
 (module Utils
   (time time-void take-drop take drop compose
 	read-file parse-file-lst parse-lst-strs read-lines
-	read-lol-words string-split file->string)
+	read-lol-words string-split list-split file->string
+	make-bst bst-histogram bst-get)
 
   (define (time thunk)
     (collect)
@@ -43,6 +44,12 @@
       (if (null? fs)
 	  x
 	  ((car fs) ((apply compose-n (cdr fs)) x)))))
+
+  (define (list-split lst)
+    (if (null? lst)
+	(values '() '())
+	(let-values ([(l r) (list-split (cddr lst))])
+	  (values (cons (car lst) l) (cons (cadr lst) r)))))
 
 ;;; ==========================================================
 
@@ -129,6 +136,56 @@
   (define (file->string file)
     (apply string-append
 	   (map (lambda (x) (string-append " " x)) (read-lines file))))
-)
+
+  ;; inserting elements into a BST
+  ;; BST type: '((k . v) lbst rbst) =
+  ;; ((caar . cdar) cadr caddr)  
+  (define (add f i x bst)
+    (cond
+     ((null? bst) (list (cons x (f i)) '() '()))
+     ((= (caar bst) x) (cons (cons x (f (cdar bst))) (cdr bst)))
+     ((< x (caar bst)) (list (car bst) (add f i x (cadr bst)) (caddr bst)))
+     (else (list (car bst) (cadr bst) (add f i x (caddr bst))))))
+
+  ;; creating a fully ballanced BST from list
+  ;; BST type: '((k . v) lbst rbst)
+  (define (list->bst f i bst l n)
+    (if (null? l)
+	bst
+	(let-values ([(a b) (take-drop n l)])
+	  (list->bst
+	   f i (list->bst f i (add f i (car b) bst) (cdr b) (quotient (sub1 n) 2))
+	   a (quotient n 2)))))
+
+  (define (make-bst f i l)
+    (list->bst f i '() (sort < l) (quotient (length l) 2)))
+
+  ;; BST as histogram
+  (define (addh x bst)
+    (cond
+     ((null? bst) (list (cons x 1) '() '()))
+     ((= (caar bst) x) (cons (cons x (add1 (cdar bst))) (cdr bst)))
+     ((< x (caar bst)) (list (car bst) (addh x (cadr bst)) (caddr bst)))
+     (else (list (car bst) (cadr bst) (addh x (caddr bst))))))
+
+  (define (list->bsth bst l n)
+    (if (null? l)
+	bst
+	(let-values ([(a b) (take-drop n l)])
+	  (list->bsth
+	   (list->bsth (addh (car b) bst) (cdr b) (quotient (sub1 n) 2))
+	   a (quotient n 2)))))
+
+  (define (bst-histogram lst) ;; tl4 4.8s , tl3 13.9s
+    (list->bsth '() (sort < lst) (quotient (length lst) 2)))
+
+  (define (bst-get i x bst)
+    (cond
+     ((null? bst) i)
+     ((= (caar bst) x) (cdar bst))
+     ((> (caar bst) x) (bst-get i x (cadr bst)))
+     (else (bst-get i x (caddr bst)))))
+    
+  )
 
 (import Utils)

@@ -1,19 +1,21 @@
 
 ;;; File operations in Chez
 ;;; ==========================================================
+;;; to compile: echo '(compile-file "utils.scm")' | scheme -q
 
 (module Utils
   (time time-void take-drop take drop compose
 	read-file parse-file-lst parse-lst-strs read-lines
 	read-lol-words string-split list-split file->string
-	make-bst bst-histogram bst-get)
+	make-bst bst-histogram bst-get string-split-parse
+	first second third fourth fifth sixth seventh eigth)
 
   (define (time thunk)
     (collect)
-    (let* ((start (current-time))
-	   (result (thunk))
-	   (end (current-time)))
-      (values result (time-difference end start))))
+    (let*-values ([(start) (current-time)]
+		  [(part1 part2) (thunk)]
+		  [(end) (current-time)])
+      (values part1 part2 (time-difference end start))))
 
   (define (time-void thunk)
     (collect)
@@ -50,6 +52,15 @@
 	(values '() '())
 	(let-values ([(l r) (list-split (cddr lst))])
 	  (values (cons (car lst) l) (cons (cadr lst) r)))))
+
+  (define first car)
+  (define second cadr)
+  (define third caddr)
+  (define fourth cadddr)
+  (define fifth (compose car cddddr))
+  (define sixth (compose cadr cddddr))
+  (define seventh (compose caddr cddddr))
+  (define eigth (compose cadddr cddddr))
 
 ;;; ==========================================================
 
@@ -132,6 +143,21 @@
 	      (cons (substring s a b) (split (add1 b) (add1 b)))))
 	 (else (split a (add1 b)))))))
 
+  ;; split string s on list of characters - inserting actual character
+  (define (string-split-parse s cl)
+    (let ((len (string-length s)))
+      (let split ((a 0) (b 0))
+	(if (= b len)
+	    (if (= a b) '() (list (substring s a b)))
+	    (let ((c (memq (string-ref s b) cl)))
+	      (cond
+	       (c (if (= a b)
+		      (split (add1 a) (add1 b))
+		      (cons (substring s a b)
+			    (cons (string (car c))
+				  (split (add1 b) (add1 b))))))
+	       (else (split a (add1 b)))))))))
+  
   ;; whole file in one large string - very fast
   (define (file->string file)
     (apply string-append
@@ -185,7 +211,7 @@
      ((= (caar bst) x) (cdar bst))
      ((> (caar bst) x) (bst-get i x (cadr bst)))
      (else (bst-get i x (caddr bst)))))
-    
+  
   )
 
 (import Utils)

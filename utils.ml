@@ -59,6 +59,10 @@ let implode l = l |> List.to_seq |> String.of_seq
 (* interval from -- to *)
 let ( -- ) a b = List.init (b-a+1) (fun i -> (i+a))
 
+let is_number s =
+  try int_of_string s |> ignore; true
+  with Failure _ -> false
+
 (* ============================================ *)
 (* File Tools *)
 (* =============================================== *)
@@ -115,6 +119,19 @@ let string_seq_filter p s = (* slower *)
 (* filter string - lib - pipe seq *)
 let string_pipe_filter p s = (* slower *)
   s |> String.to_seq |> (Seq.filter p) |> String.of_seq
+
+(* split string on a list of characters - inserting back characters *)
+let string_split_parse s cl =
+  let len = String.length s in
+  let rec split a b =
+    if b = len
+    then if (a = b) then [] else [String.sub s a (b - a)]
+    else if List.mem s.[b] cl
+    then if a = b then split (a + 1) (b + 1)
+      else String.sub s a (b - a) :: Char.escaped s.[b] ::
+           split (b + 1) (b + 1)
+    else split a (b + 1)
+  in split 0 0
 
 (* ====================================================== *)
 

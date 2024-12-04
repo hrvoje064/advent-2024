@@ -30,6 +30,9 @@ val implode : char list -> string
 (* interval from -- to *)
 val ( -- ) : int -> int -> int list
 
+(* checking if string is a number - integer *)
+val is_number : string -> bool
+
 (* ============================================ *)
 (* File Tools *)
 (* =============================================== *)
@@ -53,6 +56,12 @@ val read_lol_words : string -> string list list
 (* filter string - my - much faster than converting to seq
    bl = buffer length *)
 val string_filter_b : int -> (char -> bool) -> string -> string
+
+(* split string on a list of characters - but inserting back the
+   actual character as a string. Used for parsing
+   string_split_parse "abcmul(123,456).done" ['(';',';')'] ==>
+   ["abcmul"; "("; "123"; ","; "456"; ")"; ".done"] *)
+val string_split_parse : string -> char list -> string list
 
 (* ====================================================== *)
 

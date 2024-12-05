@@ -8,81 +8,27 @@ let find_xmas mx dx =
   let dir_l = ["u";"d";"l";"r";"nw";"ne";"sw";"se"] in
   let chr_l = ['M';'A';'S'] in
 
-  let up i j =
-    if (i-2) < 0 then 0
-    else
-      let rec up i = function
+  let rec search i j iinc jinc dist =
+    let ii,ji = (i + iinc * dist, j + jinc * dist) in
+    if ii > dx || ii < 0 || ji > dx || ji < 0
+    then 0 else
+      let rec search i j = function
           [] -> 1
-        | c::cs when c = mx.(i).(j) -> up (i-1) cs
+        | c::cs when c = mx.(i).(j) -> search (i+iinc) (j+jinc) cs
         | _ -> 0
-      in up i chr_l in
-  let dn i j =
-    if (i+2) > dx then 0
-    else
-      let rec dn i = function
-          [] -> 1
-        | c::cs when c = mx.(i).(j) -> dn (i+1) cs
-        | _ -> 0
-      in dn i chr_l in
-  let lt i j =
-    if (j-2) < 0 then 0
-    else
-      let rec lt j = function
-          [] -> 1
-        | c::cs when c = mx.(i).(j) -> lt (j-1) cs
-        | _ -> 0
-      in lt j chr_l in
-  let rt i j =
-    if (j+2) > dx then 0
-    else
-      let rec rt j = function
-          [] -> 1
-        | c::cs when c = mx.(i).(j) -> rt (j+1) cs
-        | _ -> 0
-      in rt j chr_l in
-  let nw i j =
-    if (j-2) < 0 || (i-2) < 0 then 0
-    else
-      let rec nw i j = function
-          [] -> 1
-        | c::cs when c = mx.(i).(j) -> nw (i-1) (j-1) cs
-        | _ -> 0
-      in nw i j chr_l in
-  let ne i j =
-    if (j+2) > dx || (i-2) < 0 then 0
-    else
-      let rec ne i j = function
-          [] -> 1
-        | c::cs when c = mx.(i).(j) -> ne (i-1) (j+1) cs
-        | _ -> 0
-      in ne i j chr_l in
-  let sw i j =
-    if (j-2) < 0 || (i+2) > dx then 0
-    else
-      let rec sw i j = function
-          [] -> 1
-        | c::cs when c = mx.(i).(j) -> sw (i+1) (j-1) cs
-        | _ -> 0
-      in sw i j chr_l in
-  let se i j =
-    if (j+2) > dx || (i+2) > dx then 0
-    else
-      let rec se i j = function
-          [] -> 1
-        | c::cs when c = mx.(i).(j) -> se (i+1) (j+1) cs
-        | _ -> 0
-      in se i j chr_l in
+      in search (i+iinc) (j+jinc) chr_l
+  in
   
   let rec search_all i j = function
       [] -> 0
-    | "u"::dt -> up (i-1) j + (search_all i j dt)
-    | "d"::dt -> dn (i+1) j + (search_all i j dt)
-    | "l"::dt -> lt i (j-1) + (search_all i j dt)
-    | "r"::dt -> rt i (j+1) + (search_all i j dt)
-    | "nw"::dt -> nw (i-1) (j-1) + (search_all i j dt)
-    | "ne"::dt -> ne (i-1) (j+1) + (search_all i j dt)
-    | "sw"::dt -> sw (i+1) (j-1) + (search_all i j dt)
-    | _ -> se (i+1) (j+1) + (search_all i j [])
+    | "u"::dt -> search i j (-1) 0 3 + (search_all i j dt)
+    | "d"::dt -> search i j 1 0 3 + (search_all i j dt)
+    | "l"::dt -> search i j 0 (-1) 3 + (search_all i j dt)
+    | "r"::dt -> search i j 0 1 3 + (search_all i j dt)
+    | "nw"::dt -> search i j (-1) (-1) 3 + (search_all i j dt)
+    | "ne"::dt -> search i j (-1) 1 3 + (search_all i j dt)
+    | "sw"::dt -> search i j 1 (-1) 3 + (search_all i j dt)
+    | _ -> search i j 1 1 3 + (search_all i j [])
   in
   
   let find =
@@ -97,31 +43,24 @@ let find_xmas mx dx =
   in find
 
 let find_x_mas mx dx =
+  let cha_l = ['M'; 'S'] in
 
-  let sw i j c=
-    if mx.(i).(j) = c then 1 else 0 in 
-  
-  let nesw i j =
-    if j > dx || (j-2) < 0 || i < 0 || (i+2) > dx then 0
-    else if mx.(i).(j) = 'M' then sw (i+2) (j-2) 'S'
-    else if mx.(i).(j) = 'S' then sw (i+2) (j-2) 'M'
-    else 0 in
-
-  let se i j c =
-    if mx.(i).(j) = c then nesw (i-2) j else 0 in
-
-  let nwse i j =
-    if j < 0 || (j+2) > dx || i < 0 || (i+2) > dx then 0
-    else if mx.(i).(j) = 'M' then se (i+2) (j+2) 'S'
-    else if mx.(i).(j) = 'S' then se (i+2) (j+2) 'M'
-    else 0 in
+  let nwse ii jj chr_l =
+    if (jj-1) < 0 || (jj+1) > dx || (ii-1) < 0 || (ii+1) > dx then 0
+    else let rec search i j jinc = function
+          [] -> if jinc < 0 then 1 else search (ii-1) (jj+1) (-2) cha_l
+        | [a;b] when mx.(i).(j) = a -> search (i+2) (j+jinc) jinc [b]
+        | [a;b] when mx.(i).(j) = b -> search (i+2) (j+jinc) jinc [a]
+        | [a] when mx.(i).(j) = a -> search i j jinc []
+        | _ -> 0
+      in search (ii-1) (jj-1) 2 chr_l in
 
   let find =
     let matches = ref 0 in
     for i = 0 to dx do
       for j = 0 to dx do
         if mx.(i).(j) = 'A'
-        then matches := nwse (i-1) (j-1) + !matches
+        then matches := nwse i j cha_l + !matches
       done
     done;
     !matches
@@ -134,3 +73,4 @@ let day4 file =
   List.iteri (fun i str -> String.iteri
                  (fun j c -> mx.(i).(j) <- c) str) rawl;
   (find_xmas mx (dx - 1), find_x_mas mx (dx - 1))
+

@@ -68,7 +68,7 @@ let day5 file =
   let p_after = List.sort_uniq comp (rev_rules r r) in
   let aft_bst =
     List.map (fun (x,l) ->
-        (x,bst_of_list (List.sort_uniq compare l))) aft_bst in
+        (x,bst_of_list (List.sort_uniq compare l))) p_after in
   let bst_after = bstv_of_list aft_bst in
   let w_fixed = List.map (Array.to_list << (rearange bst_after)) wrong in
   let midr = List.map

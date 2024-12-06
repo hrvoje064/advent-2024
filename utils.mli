@@ -30,8 +30,23 @@ val implode : char list -> string
 (* interval from -- to *)
 val ( -- ) : int -> int -> int list
 
-(* checking if string is a number - integer *)
+(* checking if string is a number - integer or float *)
 val is_number : string -> bool
+
+(* checking if string is integer *)
+val is_int : string -> bool
+
+(* checking if string is float *)
+val is_float : string -> bool
+
+(* remove first found element from a list *)
+val remove : 'a -> 'a list -> 'a list
+
+(* remove all found elements from a list *)
+val remove_all : 'a -> 'a list -> 'a list
+
+(* returns a pair of lists - left true, right false elements *)
+val filter_split : ('a -> bool) -> 'a list -> 'a list * 'a list
 
 (* ============================================ *)
 (* File Tools *)
@@ -74,12 +89,30 @@ val permutations : 'a list -> 'a list list
 (* ====================================================== *)
 
 (* faster version with BST - finding duplicates *)
-(* finding number of specific element in a list *)
-type 'a t = Lf | Br of 'a t * ('a * 'a) * 'a t
+
+(* BST - no values, just finding elements fast *)
+type 'a t = Lf | Br of 'a t * 'a * 'a t
+
+(* finding if e is member of BST *)
+val member : 'a -> 'a t -> bool
+
+(* Making BST from a list *)
+val bst_of_list : 'a list -> 'a t
+
+(* finding number of specific element in a list - histogram *)
+type 'a th = Lfh | Brh of 'a th * ('a * int) * 'a th
 
 (* get number of repeated elemnets *)
-val get : int -> int t -> int
+val geth : 'a -> 'a th -> int
 
-(* make BST from list of ints *)
-val bst_of_list : int list -> int t
-    
+(* make BST histogram from list of of elements *)
+val hist_of_list : 'a list -> 'a th
+
+(* BSTs with values *)
+type ('a, 'b) tv = Lfv | Brv of ('a, 'b) tv * ('a * 'b) * ('a, 'b) tv
+
+val getv : 'a -> ('a, 'b) tv -> 'b option
+
+val memberv : 'a -> ('a, 'b) tv -> bool
+
+val bstv_of_list : ('a * 'b) list -> ('a, 'b) tv

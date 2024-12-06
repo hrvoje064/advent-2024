@@ -38,21 +38,16 @@ let rec check_m rls = function
 
 let rec intersect i rl = function
     [] -> i
-  | x::xs when List.mem x rl -> intersect (i+1) rl xs
+  | x::xs when member x rl -> intersect (i+1) rl xs
   | _::xs -> intersect i rl xs
 
-let rec remove x = function
-    [] -> []
-  | h::t -> if h=x then remove x t else h :: remove x t
-               
 let rearange rls pages =
   let a = Array.make (List.length pages) (-1) in
   List.iter (fun p ->
       let i = intersect 0
           (match (getv p rls) with
-             None -> [] | Some l -> l) (remove p pages) in
-      a.(i) <- p) pages;
-  a
+             None -> Lf | Some bst -> bst) (remove p pages) in
+      a.(i) <- p) pages; a
   
 let day5 file =
   let rawl = read_lines file in
@@ -69,10 +64,12 @@ let day5 file =
     List.map (fun (x,l) ->
         (x,bst_of_list (List.sort_uniq compare l))) p_before in
   let r_bst = bstv_of_list srbst in
-  let valid = List.filter ((check_m r_bst) << List.rev) m in
-  let wrong = List.filter (not << (check_m r_bst) << List.rev) m in
+  let (valid,wrong) = filter_split ((check_m r_bst) << List.rev) m in
   let p_after = List.sort_uniq comp (rev_rules r r) in
-  let bst_after = bstv_of_list p_after in
+  let aft_bst =
+    List.map (fun (x,l) ->
+        (x,bst_of_list (List.sort_uniq compare l))) aft_bst in
+  let bst_after = bstv_of_list aft_bst in
   let w_fixed = List.map (Array.to_list << (rearange bst_after)) wrong in
   let midr = List.map
       (fun l -> List.(hd (drop (length l / 2) l))) valid in

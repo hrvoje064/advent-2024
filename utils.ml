@@ -59,10 +59,39 @@ let implode l = l |> List.to_seq |> String.of_seq
 (* interval from -- to *)
 let ( -- ) a b = List.init (b-a+1) (fun i -> (i+a))
 
-let is_number s =
+let is_int s =
   try int_of_string s |> ignore; true
   with Failure _ -> false
 
+let is_float s =
+  try float_of_string s |> ignore; true
+  with Failure _ -> false
+   
+let is_number s =
+  try
+    int_of_string s |> ignore ; true
+  with Failure _ ->
+  try
+    float_of_string s |> ignore; true
+  with Failure _ -> false
+
+let rec remove e = function
+    [] -> []
+  | x::xs -> if e = x then xs
+    else x :: remove e xs
+
+let rec remove_all e = function
+    [] -> []
+  | x::xs -> if e = x then remove_all e xs
+    else x :: remove_all e xs
+
+(* returns a tuple of lists *)
+let rec filter_split p = function
+    [] -> ([],[])
+  | x::xs -> match filter_split p xs with
+      (t, f) -> if (p x) then (x :: t, f)
+      else (t, x :: f)
+                                         
 (* ============================================ *)
 (* File Tools *)
 (* =============================================== *)
@@ -238,21 +267,24 @@ let  permutations4 l =
                      (perms (n-1) xs))
   in perms ((List.length l)-1) l
 
-(* faster version with BST - finding duplicates *)
-type 'a t = Lf | Br of 'a t * ('a * 'a) * 'a t
+(* BSTs *)
+(* ================================================= *)
 
-let rec get k = function
-    Lf -> 0
-  | Br (_, (k',v), _) when k' = k -> v
-  | Br (l, (k',_), r) -> if k < k' then get k l else get k r
+(* BST - no value - basically removing duplicates *)
+type 'a t = Lf | Br of 'a t * 'a * 'a t
+                         
+let rec member k = function
+    Lf -> false
+  | Br (_,k', _) when k' = k -> true
+  | Br (l, k', r) -> if k < k' then member k l else member k r
 
 let rec insert e = function
-    Lf -> Br (Lf, (e,1), Lf)
-  | Br (l,(k,v),r) when k = e -> Br (l,(k,v+1),r)
-  | Br (l,(k,v),r) -> if e < k then Br (insert e l,(k,v), r)
-    else Br (l, (k,v), insert e r)
+    Lf -> Br (Lf, e, Lf)
+  | Br (l,k,r) when k = e -> Br (l,k,r)
+  | Br (l,k,r) -> if e < k then Br (insert e l, k, r)
+    else Br (l, k, insert e r)
 
-let set_of_blist l =
+let bst_of_list l =
   let rec ltos s len = function
       [] -> s
     | [x] -> insert x s
@@ -262,8 +294,67 @@ let set_of_blist l =
         match take_drop len2 l with
           (a,x::xs) ->
           ltos (ltos (insert x s) (len2 - 1) a) (len2 - 1) xs
-        | _ -> failwith "set_of_blist"
+        | _ -> failwith "bst_of_llist"
       end
-  in ltos Lf (List.length l) (List.sort compare l)
+  in ltos Lf (List.length l) l
 
-let bst_of_list = set_of_blist
+(* BST - finding histograms *)
+type 'a th = Lfh | Brh of 'a th * ('a * int) * 'a th
+                           
+let rec geth k = function
+    Lfh -> 0
+  | Brh (_, (k',v), _) when k' = k -> v
+  | Brh (l, (k',_), r) -> if k < k' then geth k l else geth k r
+
+let rec inserth e = function
+    Lfh -> Brh (Lfh, (e,1), Lfh)
+  | Brh (l,(k,v),r) when k = e -> Brh (l,(k,v+1),r)
+  | Brh (l,(k,v),r) -> if e < k then Brh (inserth e l,(k,v), r)
+    else Brh (l, (k,v), inserth e r)
+
+let hist_of_list l =
+  let rec ltos s len = function
+      [] -> s
+    | [x] -> inserth x s
+    | l ->
+      begin
+        let len2 = len / 2 in
+        match take_drop len2 l with
+          (a,x::xs) ->
+          ltos (ltos (inserth x s) (len2 - 1) a) (len2 - 1) xs
+        | _ -> failwith "hist_of_list"
+      end
+  in ltos Lfh (List.length l) l
+
+(* BSTs with values *)
+type ('a, 'b) tv = Lfv | Brv of ('a, 'b) tv * ('a * 'b) * ('a, 'b) tv
+                                 
+let rec getv k = function
+    Lfv -> None
+  | Brv (_, (k',v), _) when k' = k -> Some v
+  | Brv (l, (k',_), r) -> if k < k' then getv k l else getv k r
+
+let rec memberv k = function
+    Lfv -> false
+  | Brv (_,(k',_), _) when k' = k -> true
+  | Brv (l, (k',_), r) -> if k < k' then memberv k l else memberv k r
+
+let rec insertv ((e,v') as x) = function
+    Lfv -> Brv (Lfv, x, Lfv)
+  | Brv (l,(k,_),r) when k = e -> Brv (l,(k,v'),r)
+  | Brv (l,(k,v),r) -> if e < k then Brv (insertv x l,(k,v), r)
+    else Brv (l, (k,v), insertv x r)
+
+let bstv_of_list l =
+  let rec ltos s len = function
+      [] -> s
+    | [x] -> insertv x s
+    | l ->
+      begin
+        let len2 = len / 2 in
+        match take_drop len2 l with
+          (a,x::xs) ->
+          ltos (ltos (insertv x s) (len2 - 1) a) (len2 - 1) xs
+        | _ -> failwith "bstv_of_list"
+      end
+  in ltos Lfv (List.length l) l

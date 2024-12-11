@@ -106,8 +106,6 @@ let odd = not << even
 
 (* char_to_int '7' => 7 *)
 let char_to_int c = int_of_string (Char.escaped c)
-
-let sum_list = List.fold_left (+) 0 
     
 (* ============================================ *)
 (* File Tools *)

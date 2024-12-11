@@ -58,9 +58,6 @@ val odd : int -> bool
     to char code for '7' *)
 val char_to_int : char -> int
 
-(** sums a list of integers *)
-val sum_list : int list -> int 
-
 (* ============================================ *)
 (* File Tools *)
 (* =============================================== *)

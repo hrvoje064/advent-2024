@@ -6,9 +6,8 @@ open Utils
 
 let calculate1 result nums =
   let rec calc = function
-      rr::[] -> rr = result 
+      [rr] -> rr = result 
     | rr::a::t -> calc ((rr + a) :: t) || calc ((rr * a) :: t)
-    | [] -> false
   in calc nums
 
 let cat a b =
@@ -16,11 +15,10 @@ let cat a b =
 
 let calculate2 result nums =
   let rec calc = function
-      rr::[] -> rr = result 
+      [rr] -> rr = result 
     | rr::a::t -> calc ((rr + a) :: t) ||
                   calc ((rr * a) :: t) ||
                   calc ((cat rr a) :: t)
-    | [] -> false
   in calc nums
 
 let day7 file =

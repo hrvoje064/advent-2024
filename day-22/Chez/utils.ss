@@ -12,7 +12,7 @@
  	first second third fourth fifth sixth seventh eight string-split-c
 	make-matrix matrix? matrix-rows matrix-columns matrix-ref mul
 	matrix-set! filter-split combinations kombs factorial
-	permutations interleave)
+	permutations interleave pair<? pair>? merge rem-sort)
 
   (define (time2 thunk)
     (collect)
@@ -59,8 +59,8 @@
 	  ((car fs) ((apply compose-n (cdr fs)) x)))))
 
   (define (list-split lst)
-    (if (null? lst)
-	(values '() '())
+    (if (or (null? lst) (null? (cdr lst)))
+	(values lst '())
 	(let-values ([(l r) (list-split (cddr lst))])
 	  (values (cons (car lst) l) (cons (cadr lst) r)))))
 
@@ -370,6 +370,43 @@
 	  (let ((ps (permutations (cdr l))))
 	    (apply append
 		   (map (lambda (p) (interlv (car l) '() p)) ps))))))
+
+  (define (pair<? p1 p2)
+  (cond
+   ((null? p2) #f)
+   ((null? p1))
+   ((< (car p1) (car p2)))
+   (else
+    (and (= (car p1) (car p2))
+	 (pair<? (cdr p1) (cdr p2))))))
+
+(define (pair>? p1 p2)
+  (cond
+   ((null? p1) #f)
+   ((null? p2))
+   ((> (car p1) (car p2)))
+   (else
+    (and (= (car p1) (car p2))
+	 (pair>? (cdr p1) (cdr p2))))))
+
+(define (merge l1 l2)
+  (cond
+   ((null? l1) l2)
+   ((null? l2) l1)
+   ((pair<? (car l1) (car l2))
+    (cons (car l1) (merge (cdr l1) l2)))
+   ((pair>? (car l1) (car l2))
+    (cons (car l2) (merge l1 (cdr l2))))
+   (else (merge (cdr l1) (cdr l2)))))
+
+(define (rem-sort lst)
+  (cond
+   ((null? lst) '())
+   ((null? (cdr lst)) lst)
+   (else
+    (let-values ([(l r) (list-split lst)])
+      (merge (rem-sort l) (rem-sort r))))))
+
   )
 
 (import Utils)
